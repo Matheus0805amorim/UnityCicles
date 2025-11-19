@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>UnityCircles – Small circles, stronger connections</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root {
+      --bg: #020617;
+      --bg-soft: rgba(15, 23, 42, 0.9);
+      --accent: #38bdf8;
+      --accent-soft: rgba(56, 189, 248, 0.16);
+      --text-main: #e5e7eb;
+      --text-muted: #94a3b8;
+      --danger: #f97373;
+      --radius-xl: 18px;
+      --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.9);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      color: var(--text-main);
+      background:
+        radial-gradient(circle at top left, #0f172a 0, transparent 55%),
+        radial-gradient(circle at bottom right, #0ea5e9 0, transparent 55%),
+        var(--bg);
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+    }
+    .app-shell {
+      width: 100%;
+      max-width: 1040px;
+      margin: 32px 16px 40px;
+    }
+    header { margin-bottom: 24px; }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid var(--accent-soft);
+      color: var(--accent);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .badge-dot {
+      width: 7px; height: 7px; border-radius: 999px;
+      background: var(--accent);
+      box-shadow: 0 0 10px rgba(56, 189, 248, 0.8);
+    }
+    h1 { margin: 10px 0 4px; font-size: clamp(28px, 3vw, 34px); }
+    .subtitle {
+      margin: 0;
+      font-size: 14px;
+      color: var(--text-muted);
+      max-width: 520px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+      gap: 18px;
+    }
+    @media (max-width: 830px) {
+      .grid { grid-template-columns: minmax(0, 1fr); }
+    }
+    .card {
+      background: linear-gradient(135deg, rgba(15,23,42,0.94), rgba(15,23,42,0.88));
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(148,163,184,0.18);
+      box-shadow: var(--shadow-soft);
+      padding: 18px 18px 20px;
+      backdrop-filter: blur(14px);
+    }
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .card h2 { margin: 0; font-size: 18px; }
+    .card small { font-size: 11px; color: var(--text-muted); }
+    .pill {
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: rgba(15,23,42,0.9);
+      border: 1px solid rgba(148,163,184,0.3);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .help { margin: 0 0 14px; font-size: 13px; color: var(--text-muted); }
+    label {
+      display: block;
+      font-size: 13px;
+      margin-bottom: 10px;
+    }
+    label span.hint { color: var(--text-muted); font-size: 11px; }
+    input, textarea {
+      width: 100%;
+      margin-top: 4px;
+      padding: 8px 11px;
+      font-size: 13px;
+      color: var(--text-main);
+      background: rgba(15,23,42,0.9);
+      border-radius: 999px;
+      border: 1px solid rgba(51,65,85,0.9);
+      outline: none;
+      transition: border 0.12s, box-shadow 0.12s, background 0.12s;
+    }
+    textarea {
+      border-radius: 12px;
+      min-height: 60px;
+      resize: vertical;
+    }
+    input:focus, textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 1px rgba(56,189,248,0.3);
+      background: rgba(15,23,42,0.98);
+    }
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 9px 18px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      background: radial-gradient(circle at top left,#38bdf8,#0ea5e9);
+      color: #020617;
+      box-shadow: 0 12px 30px rgba(15,23,42,0.85);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: transform 0.09s, box-shadow 0.09s, filter 0.09s;
+    }
+    button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 16px 35px rgba(15,23,42,0.95);
+      filter: brightness(1.04);
+    }
+    button:active {
+      transform: translateY(0);
+      box-shadow: 0 10px 26px rgba(15,23,42,0.9);
+      filter: brightness(0.98);
+    }
+    .ghost-btn {
+      background: transparent;
+      color: var(--accent);
+      border: 1px solid var(--accent-soft);
+      padding-inline: 10px;
+      box-shadow: none;
+    }
+    .error {
+      margin: 8px 0 0;
+      font-size: 12px;
+      color: var(--danger);
+      min-height: 16px;
+    }
+    .stats-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 8px;
+    }
+    .stat-chip {
+      flex: 1 1 90px;
+      min-width: 90px;
+      padding: 8px 10px;
+      background: rgba(15,23,42,0.95);
+      border-radius: 12px;
+      border: 1px solid rgba(148,163,184,0.28);
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .stat-chip strong {
+      display: block;
+      font-size: 15px;
+      color: var(--accent);
+    }
+    .missions {
+      margin-top: 4px;
+      list-style: none;
+      padding: 0;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+    .missions li {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 0;
+      border-top: 1px solid rgba(51,65,85,0.7);
+    }
+    .missions li:first-child { border-top: none; }
+    .mission-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent);
+    }
+    .pill-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 7px;
+      border-radius: 999px;
+      border: 1px solid rgba(148,163,184,0.4);
+      color: var(--text-muted);
+      font-size: 10px;
+      gap: 4px;
+    }
+    .pill-tag-dot {
+      width: 6px; height: 6px; border-radius: 999px; background: var(--accent);
+    }
+    .circle-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+      margin-top: 4px;
+      font-size: 12px;
+    }
+    .circle-card {
+      padding: 10px 11px;
+      border-radius: 12px;
+      background: radial-gradient(circle at top left, rgba(56,189,248,0.08), rgba(15,23,42,0.96));
+      border: 1px solid rgba(148,163,184,0.3);
+    }
+    .circle-card h3 {
+      margin: 0 0 2px;
+      font-size: 13px;
+      color: var(--accent);
+    }
+    .circle-card small {
+      display: block;
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .circle-card ul {
+      margin: 0;
+      padding-left: 16px;
+      font-size: 11px;
+      color: var(--text-main);
+    }
+    footer {
+      margin-top: 18px;
+      font-size: 11px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-shell">
+    <header>
+      <div class="badge">
+        <span class="badge-dot"></span>
+        Built for Hack4Unity – Prototype
+      </div>
+      <h1>UnityCircles</h1>
+      <p class="subtitle">
+        Small circles, stronger connections. Match people into guided microcircles of 3–5 members with
+        weekly missions that turn strangers into a support network.
+      </p>
+    </header>
+
+    <div class="grid">
+      <!-- LEFT -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Join a microcircle</h2>
+            <small>Answer a few questions and we’ll place you in a small, balanced group.</small>
+          </div>
+          <span class="pill">Front-end only demo</span>
+        </div>
+
+        <p class="help">
+          This prototype runs fully in your browser using localStorage. No login, no backend – ideal for a safe hackathon demo.
+        </p>
+
+        <label>
+          Name
+          <input id="name" placeholder="Your name" autocomplete="off" />
+        </label>
+
+        <label>
+          What are you looking for? <span class="hint">(comma separated)</span>
+          <input id="interests" placeholder="study group, local community, mental health support..." />
+        </label>
+
+        <label>
+          Availability
+          <input id="availability" placeholder="Evenings, weekends, mornings..." />
+        </label>
+
+        <label>
+          One line about you (optional)
+          <textarea id="about" placeholder="New in town, CS student, looking for accountability partners..."></textarea>
+        </label>
+
+        <div style="display:flex;align-items:center;gap:10px;margin-top:10px;">
+          <button id="join-btn">Join a circle</button>
+          <button class="ghost-btn" id="reset-btn" type="button">Clear demo data</button>
+        </div>
+
+        <p id="error" class="error"></p>
+
+        <div id="your-circle" style="display:none;margin-top:14px;">
+          <hr style="border:none;border-top:1px solid rgba(51,65,85,0.9);margin:12px 0;">
+          <div class="card-header" style="margin-bottom:6px;">
+            <div>
+              <h2 style="font-size:15px;">Your current circle</h2>
+              <small>Share, listen and complete missions together weekly.</small>
+            </div>
+            <span class="pill-tag">
+              <span class="pill-tag-dot"></span>
+              Active
+            </span>
+          </div>
+
+          <p id="circle-topic" style="font-size:13px;color:var(--text-muted);margin:0 0 4px;"></p>
+          <ul id="circle-members" style="margin:0;padding-left:16px;font-size:12px;"></ul>
+          <ul class="missions" id="missions-list"></ul>
+        </div>
+      </div>
+
+      <!-- RIGHT -->
+      <div class="card">
+        <div class="card-header">
+          <div>
+            <h2>Live demo snapshot</h2>
+            <small>All data is stored locally in your browser.</small>
+          </div>
+        </div>
+
+        <div class="stats-row">
+          <div class="stat-chip">
+            <strong id="stat-users">0</strong>
+            people matched
+          </div>
+          <div class="stat-chip">
+            <strong id="stat-circles">0</strong>
+            circles created
+          </div>
+          <div class="stat-chip">
+            <strong id="stat-avg">0</strong>
+            avg. members / circle
+          </div>
+        </div>
+
+        <div style="margin-top:10px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:13px;font-weight:600;">All circles in this session</span>
+            <span style="font-size:11px;color:var(--text-muted);" id="stat-session-label">No circles yet</span>
+          </div>
+          <div id="all-circles" class="circle-list"></div>
+        </div>
+
+        <div style="margin-top:14px;">
+          <span style="font-size:11px;color:var(--text-muted);">Example weekly missions</span>
+          <ul class="missions">
+            <li>
+              <span class="mission-dot"></span>
+              Share one challenge from your week and one thing you are grateful for.
+            </li>
+            <li>
+              <span class="mission-dot"></span>
+              Schedule a 30-minute check-in call and co-create a mini goal for next week.
+            </li>
+            <li>
+              <span class="mission-dot"></span>
+              As a circle, pick a small act of kindness and each person applies it locally.
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <span>UnityCircles – small circles, stronger connections.</span>
+      <span>Prototype: front-end only (localStorage matchmaking).</span>
+    </footer>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "unitycircles-demo-v1";
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { users: [], circles: [] };
+        return JSON.parse(raw);
+      } catch {
+        return { users: [], circles: [] };
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function missionSet(topic) {
+      const t = (topic || "").toLowerCase();
+      if (t.includes("study") || t.includes("exam") || t.includes("college")) {
+        return [
+          "Share your main academic goal for this month and one obstacle you face.",
+          "Host a 45-minute focus session where each member studies in silence, then shares wins.",
+          "Create a shared one-page study plan for the next week."
+        ];
+      }
+      if (t.includes("mental") || t.includes("support") || t.includes("wellbeing")) {
+        return [
+          "Each member shares one small self-care habit that worked this week.",
+          "Do a round of 'one thing I’m proud of' and reflect on it together.",
+          "Choose a gentle challenge: one small boundary you will protect this week."
+        ];
+      }
+      if (t.includes("community") || t.includes("local") || t.includes("neighbour") || t.includes("neighbor")) {
+        return [
+          "Map one local need you’ve noticed in your area and share in the circle.",
+          "Agree on a small collective action you can take locally in the next 7 days.",
+          "Invite one new person from your area to visit your circle next week."
+        ];
+      }
+      return [
+        "Share one story about when you felt truly supported by someone.",
+        "Define one shared goal as a circle for the next 2 weeks.",
+        "Each member sends an anonymous note of appreciation to another member."
+      ];
+    }
+
+    function matchUser(state, user) {
+      const firstInterest = (user.interests[0] || "general support").trim().toLowerCase();
+
+      let circle = state.circles.find(
+        c => c.members.length < 5 && c.topic.toLowerCase() === firstInterest
+      );
+
+      if (!circle) {
+        circle = state.circles.find(c => c.members.length < 5);
+      }
+
+      if (!circle) {
+        circle = {
+          id: Date.now(),
+          topic: firstInterest || "general support",
+          members: [],
+          missions: missionSet(firstInterest)
+        };
+        state.circles.push(circle);
+      }
+
+      circle.members.push({
+        id: user.id,
+        name: user.name,
+        about: user.about || ""
+      });
+
+      return circle;
+    }
+
+    const $ = sel => document.querySelector(sel);
+
+    const nameInput = $("#name");
+    const interestsInput = $("#interests");
+    const availabilityInput = $("#availability");
+    const aboutInput = $("#about");
+    const errorEl = $("#error");
+    const joinBtn = $("#join-btn");
+    const resetBtn = $("#reset-btn");
+
+    const yourCircleSection = $("#your-circle");
+    const circleTopicEl = $("#circle-topic");
+    const circleMembersEl = $("#circle-members");
+    const missionsListEl = $("#missions-list");
+
+    const statUsersEl = $("#stat-users");
+    const statCirclesEl = $("#stat-circles");
+    const statAvgEl = $("#stat-avg");
+    const statSessionLabelEl = $("#stat-session-label");
+    const allCirclesContainer = $("#all-circles");
+
+    let state = loadState();
+    let currentUser = null;
+    let currentCircle = null;
+
+    function renderStats() {
+      const userCount = state.users.length;
+      const circleCount = state.circles.length;
+      statUsersEl.textContent = userCount;
+      statCirclesEl.textContent = circleCount;
+      statAvgEl.textContent = circleCount === 0 ? "0" : (userCount / circleCount).toFixed(1);
+
+      statSessionLabelEl.textContent =
+        circleCount === 0 ? "No circles created yet." : circleCount + " circle(s) in this demo.";
+
+      allCirclesContainer.innerHTML = "";
+      state.circles.forEach(circle => {
+        const div = document.createElement("div");
+        div.className = "circle-card";
+        div.innerHTML = `
+          <h3>${circle.topic || "general support"}</h3>
+          <small>${circle.members.length} member(s)</small>
+          <ul>${circle.members
+            .map(m => `<li>${m.name}${m.about ? " – " + m.about : ""}</li>`)
+            .join("")}</ul>
+        `;
+        allCirclesContainer.appendChild(div);
+      });
+    }
+
+    function renderUserCircle(circle, user) {
+      if (!circle || !user) {
+        yourCircleSection.style.display = "none";
+        return;
+      }
+      yourCircleSection.style.display = "block";
+
+      circleTopicEl.textContent =
+        "Circle focus: " +
+        (circle.topic || "general support") +
+        " · " +
+        circle.members.length +
+        " member(s)";
+
+      circleMembersEl.innerHTML = circle.members
+        .map(m => `<li>${m.name}${m.id === user.id ? " (you)" : ""}${m.about ? " – " + m.about : ""}</li>`)
+        .join("");
+
+      missionsListEl.innerHTML = "";
+      (circle.missions || missionSet(circle.topic)).forEach(text => {
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="mission-dot"></span>${text}`;
+        missionsListEl.appendChild(li);
+      });
+    }
+
+    function joinCircle() {
+      const name = nameInput.value.trim();
+      const interestsRaw = interestsInput.value.trim();
+      const availability = availabilityInput.value.trim();
+      const about = aboutInput.value.trim();
+
+      if (!name) {
+        errorEl.textContent = "Please add your name to join a circle.";
+        return;
+      }
+      if (!interestsRaw) {
+        errorEl.textContent = "Tell us at least one thing you are looking for.";
+        return;
+      }
+
+      const interests = interestsRaw
+        .split(",")
+        .map(s => s.trim())
+        .filter(Boolean);
+
+      const user = {
+        id: Date.now(),
+        name,
+        interests,
+        availability,
+        about
+      };
+
+      state.users.push(user);
+      const circle = matchUser(state, user);
+      currentUser = user;
+      currentCircle = circle;
+
+      saveState(state);
+      renderStats();
+      renderUserCircle(circle, user);
+      errorEl.textContent = "";
+    }
+
+    function resetDemo() {
+      if (!confirm("Clear all local demo data? This cannot be undone.")) return;
+      state = { users: [], circles: [] };
+      currentUser = null;
+      currentCircle = null;
+      saveState(state);
+      renderStats();
+      renderUserCircle(null, null);
+      errorEl.textContent = "";
+    }
+
+    joinBtn.addEventListener("click", joinCircle);
+    resetBtn.addEventListener("click", resetDemo);
+
+    // Initial render
+    renderStats();
+  </script>
+</body>
+</html>
